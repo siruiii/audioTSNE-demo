@@ -33,8 +33,6 @@
         <a-cursor></a-cursor>
       </a-camera>
 
-
-
       <a-entity id="sphere-container"></a-entity>
 
       <button id="redirect-button">Go Back</button>
@@ -43,10 +41,16 @@
       const jsonUrl = "tsne_results.json";
 
       let currentlyPlayingSound = null;
+      let startTime = null;
 
-      function stopCurrentlyPlayingSound() {
+      function logDurationAndStopSound() {
         if (currentlyPlayingSound) {
           currentlyPlayingSound.components.sound.stopSound();
+          const endTime = new Date();
+          const duration = (endTime - startTime) / 1000; // Duration in seconds
+          const soundPath = currentlyPlayingSound.getAttribute('src');
+          console.log(`Duration: ${duration}s, Audio Path: ${soundPath}`);
+          startTime = null;
           currentlyPlayingSound = null;
         }
       }
@@ -87,13 +91,26 @@
               container.appendChild(sphere);
 
               sphere.addEventListener("click", () => {
+          //       if (sphere.getAttribute('color') === 'red') {
+          //   sphere.setAttribute('color', 'green');
+          // }
                 if (currentlyPlayingSound === sound) {
-                  stopCurrentlyPlayingSound();
+                  sound.components.sound.stopSound();
+                  startTime = null;
+                  currentlyPlayingSound = null;
                 } else {
-                  stopCurrentlyPlayingSound();
+                  logDurationAndStopSound();
                   sound.components.sound.playSound();
                   currentlyPlayingSound = sound;
+                  startTime = new Date();
                 }
+                // Log the audio path when the sphere is clicked
+                console.log(`${soundPath}`);
+              });
+
+              // Handle the end of the sound
+              sound.addEventListener('sound-ended', () => {
+                logDurationAndStopSound();
               });
             });
           })
