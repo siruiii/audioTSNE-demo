@@ -6,146 +6,105 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r110/three.min.js"></script>
     <style>
-    #redirect-button {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 10px 20px;
-      cursor: pointer;
-      z-index: 1; /* Make sure the button is above other elements */
-    }
-    #redirect-button:hover {
-      background-color: #0056b3;
-    }</style>
+      #redirect-button {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        cursor: pointer;
+        z-index: 1;
+      }
+      #redirect-button:hover {
+        background-color: #0056b3;
+      }
+    </style>
   </head>
   <body>
     <a-scene>
-      <!-- Sky with 360-degree photo -->
       <a-sky
         src="https://cdn.glitch.global/2bafe8a2-597d-4e28-abb9-ebb448b47b66/skybox.jpg?v=1722322193791"
       ></a-sky>
 
-      <!-- Camera with cursor -->
-      <a-camera position="0 10 0">
+      <a-camera position="0 0 0">
         <a-cursor></a-cursor>
-        <!-- Add cursor to detect clicks -->
       </a-camera>
 
-      <!-- Box container -->
-      <a-entity id="box-container"></a-entity>
 
-      <!-- First clickable box -->
-      <a-box
-        class="clickable-box"
-        id="sound-cube-1"
-        position="15 5 15"
-        rotation="0 45 0"
-        width="2"
-        height="2"
-        depth="2"
-        color="blue"
-        event-set__enter="_event: mouseenter; color: red"
-        event-set__leave="_event: mouseleave; color: blue"
-      >
-        <a-sound
-          id="cube-sound-1"
-          src="https://cdn.jsdelivr.net/gh/siruiii/audioTSNE-demo@c433ec4c47dc2458d8219305c65ce2eb7f26845f/chunk_0.wav"
-          autoplay="false"
-          volume="5"
-        >
-        </a-sound>
-      </a-box>
 
-      <!-- Second clickable box -->
-      <a-box
-        class="clickable-box"
-        id="sound-cube-2"
-        position="-15 10 15"
-        rotation="0 45 0"
-        width="2"
-        height="2"
-        depth="2"
-        color="green"
-        event-set__enter="_event: mouseenter; color: yellow"
-        event-set__leave="_event: mouseleave; color: green"
-      >
-        <a-sound
-          id="cube-sound-2"
-          src="https://cdn.jsdelivr.net/gh/siruiii/audioTSNE-demo@c433ec4c47dc2458d8219305c65ce2eb7f26845f/chunk_120000.wav"
-          autoplay="false"
-          volume="5"
-        >
-        </a-sound>
-      </a-box>
+      <a-entity id="sphere-container"></a-entity>
+
+      <button id="redirect-button">Go Back</button>
     </a-scene>
-    <button id="redirect-button">Go Back</button>
     <script>
-      // URL to your JSON file
       const jsonUrl = "tsne_results.json";
 
-      // Radius and height of the cylinder
-      const cylinderRadius = 450;
-      const cylinderHeight = 10;
+      let currentlyPlayingSound = null;
 
-      // Function to load and create boxes
-      function loadAndCreateBoxes(url) {
+      function stopCurrentlyPlayingSound() {
+        if (currentlyPlayingSound) {
+          currentlyPlayingSound.components.sound.stopSound();
+          currentlyPlayingSound = null;
+        }
+      }
+
+      function loadAndCreateSpheres(url) {
         fetch(url)
           .then((response) => response.json())
           .then((data) => {
-            const container = document.getElementById("box-container");
+            const container = document.getElementById("sphere-container");
+            const radius = 200; // Radius of the cylinder
+            const maxX = Math.max(...data.map(item => item.point[0]));
+            const minX = Math.min(...data.map(item => item.point[0]));
+            const rangeX = maxX - minX;
+
             data.forEach((item) => {
               const point = item.point;
-              // Assuming point is [x, y]
+              const soundPath = item.path;
               const x2d = point[0];
-              const z2d = point[1];
+              const y2d = point[1];
 
-              // Convert 2D point to cylindrical coordinates
-              // Normalize the 2D points to map them to angles and heights
-              const angle = (x2d / Math.PI) * 2 * Math.PI; // Angle around the cylinder
-              const height =
-                ((z2d + 1) / 2) * cylinderHeight - cylinderHeight / 2; // Height along the cylinder
+              // Convert 2D coordinates to cylindrical coordinates
+              const theta = ((x2d - minX) / rangeX) * 2 * Math.PI;
+              const x3d = radius * Math.cos(theta);
+              const z3d = radius * Math.sin(theta);
+              const y3d = y2d; // Use y2d directly for the y-coordinate
 
-              // Convert cylindrical coordinates to Cartesian coordinates
-              const x = cylinderRadius * Math.cos(angle);
-              const y = height;
-              const z = cylinderRadius * Math.sin(angle);
+              const sphere = document.createElement("a-sphere");
+              sphere.setAttribute("position", `${x3d} ${y3d} ${z3d}`);
+              sphere.setAttribute("radius", "2");
+              sphere.setAttribute("color", "red");
 
-              // Create a new box (sphere)
-              const box = document.createElement("a-sphere");
-              box.setAttribute("position", `${x} ${y} ${z}`);
-              box.setAttribute("radius", "5"); // Adjust the radius if needed
-              box.setAttribute("color", "red"); // or any color you like
+              const sound = document.createElement("a-sound");
+              sound.setAttribute("src", soundPath);
+              sound.setAttribute("autoplay", "false");
+              sound.setAttribute("volume", "50");
 
-              // Add box to the container
-              container.appendChild(box);
+              sphere.appendChild(sound);
+              container.appendChild(sphere);
+
+              sphere.addEventListener("click", () => {
+                if (currentlyPlayingSound === sound) {
+                  stopCurrentlyPlayingSound();
+                } else {
+                  stopCurrentlyPlayingSound();
+                  sound.components.sound.playSound();
+                  currentlyPlayingSound = sound;
+                }
+              });
             });
           })
           .catch((error) => console.error("Error loading JSON:", error));
       }
 
-      // Call the function to load JSON and create boxes
-      loadAndCreateBoxes(jsonUrl);
+      loadAndCreateSpheres(jsonUrl);
 
-      // General click event handler for clickable boxes
-      function handleBoxClick(event) {
-        const sound = event.target.querySelector("a-sound");
-        if (sound) {
-          sound.components.sound.playSound();
-        }
-      }
-
-      // Attach the click event handler to all clickable boxes
-      document.querySelectorAll(".clickable-box").forEach((box) => {
-        box.addEventListener("click", handleBoxClick);
+      document.querySelector('#redirect-button').addEventListener('click', function() {
+        window.location.href = 'https://zealous-puzzle-kumquat.glitch.me/';
       });
-      
-          document.querySelector('#redirect-button').addEventListener('click', function() {
-      window.location.href = 'https://zealous-puzzle-kumquat.glitch.me/'; // Redirect to another site
-    });
     </script>
   </body>
 </html>
