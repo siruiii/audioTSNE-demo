@@ -12,11 +12,11 @@
   </head>
   <body>
     <a-scene
-      background="color: #212"
-      environment
+
       cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .raycastable"
       info-message="htmlSrc: #messageText">
       <a-assets>
+        <img id="yourSkyboxImage" src="skybox.jpg" crossorigin="anonymous"/>
         <a-asset-item id="messageText" src="message.html"></a-asset-item>
         <!--
           Image source: http://www.ghibli.jp/works/kazetachinu/#frame&gid=1&pid=1
@@ -57,6 +57,8 @@
           position="0 0.495 0.002"
          ></a-mixin>
       </a-assets>
+
+      <a-sky src="#yourSkyboxImage"></a-sky>
 
       <a-entity
         id="background"
