@@ -1,127 +1,132 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>ICH-1</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r110/three.min.js"></script>
-    <style>
-      #redirect-button {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        padding: 10px 20px;
-        cursor: pointer;
-        z-index: 1;
+
+<head>
+  <meta charset="utf-8" />
+  <title>ICH-1</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r110/three.min.js"></script>
+  <style>
+    #redirect-button {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    #redirect-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <a-scene>
+    <a-sky src="skybox.jpg"></a-sky>
+
+    <a-camera position="0 0 0">
+      <a-cursor></a-cursor>
+    </a-camera>
+
+    <a-entity id="sphere-container"></a-entity>
+    <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .raycastable"></a-entity>
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .raycastable" line="color: #118A7E"></a-entity>
+
+
+    <button id="redirect-button">Go Back</button>
+  </a-scene>
+  <script>
+    const jsonUrl = "tsne_results.json";
+
+    let currentlyPlayingSound = null;
+    let startTime = null;
+
+    function logDurationAndStopSound() {
+      if (currentlyPlayingSound) {
+        currentlyPlayingSound.components.sound.stopSound();
+        const endTime = new Date();
+        const duration = (endTime - startTime) / 1000; // Duration in seconds
+        const soundPath = currentlyPlayingSound.getAttribute('src');
+        console.log(`Duration: ${duration}s, Audio Path: ${soundPath}`);
+        startTime = null;
+        currentlyPlayingSound = null;
       }
-      #redirect-button:hover {
-        background-color: #0056b3;
-      }
-    </style>
-  </head>
-  <body>
-    <a-scene>
-      <a-sky
-        src="skybox.jpg"
-      ></a-sky>
+    }
 
-      <a-camera position="0 0 0">
-        <a-cursor></a-cursor>
-      </a-camera>
+    function loadAndCreateSpheres(url) {
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          const container = document.getElementById("sphere-container");
+          const radius = 200; // Radius of the cylinder
+          const maxX = Math.max(...data.map(item => item.point[0]));
+          const minX = Math.min(...data.map(item => item.point[0]));
+          const rangeX = maxX - minX;
 
-      <a-entity id="sphere-container"></a-entity>
+          data.forEach((item) => {
+            const point = item.point;
+            const soundPath = item.path;
+            const x2d = point[0];
+            const y2d = point[1];
 
-      <button id="redirect-button">Go Back</button>
-    </a-scene>
-    <script>
-      const jsonUrl = "tsne_results.json";
+            // Convert 2D coordinates to cylindrical coordinates
+            const theta = ((x2d - minX) / rangeX) * 2 * Math.PI;
+            const x3d = radius * Math.cos(theta);
+            const z3d = radius * Math.sin(theta);
+            const y3d = y2d; // Use y2d directly for the y-coordinate
 
-      let currentlyPlayingSound = null;
-      let startTime = null;
+            const sphere = document.createElement("a-sphere");
+            sphere.setAttribute("position", `${x3d} ${y3d} ${z3d}`);
+            sphere.setAttribute("radius", "2");
+            sphere.setAttribute("color", "red");
 
-      function logDurationAndStopSound() {
-        if (currentlyPlayingSound) {
-          currentlyPlayingSound.components.sound.stopSound();
-          const endTime = new Date();
-          const duration = (endTime - startTime) / 1000; // Duration in seconds
-          const soundPath = currentlyPlayingSound.getAttribute('src');
-          console.log(`Duration: ${duration}s, Audio Path: ${soundPath}`);
-          startTime = null;
-          currentlyPlayingSound = null;
-        }
-      }
+            const sound = document.createElement("a-sound");
+            sound.setAttribute("src", soundPath);
+            sound.setAttribute("autoplay", "false");
+            sound.setAttribute("volume", "50");
 
-      function loadAndCreateSpheres(url) {
-        fetch(url)
-          .then((response) => response.json())
-          .then((data) => {
-            const container = document.getElementById("sphere-container");
-            const radius = 200; // Radius of the cylinder
-            const maxX = Math.max(...data.map(item => item.point[0]));
-            const minX = Math.min(...data.map(item => item.point[0]));
-            const rangeX = maxX - minX;
+            sphere.appendChild(sound);
+            container.appendChild(sphere);
 
-            data.forEach((item) => {
-              const point = item.point;
-              const soundPath = item.path;
-              const x2d = point[0];
-              const y2d = point[1];
-
-              // Convert 2D coordinates to cylindrical coordinates
-              const theta = ((x2d - minX) / rangeX) * 2 * Math.PI;
-              const x3d = radius * Math.cos(theta);
-              const z3d = radius * Math.sin(theta);
-              const y3d = y2d; // Use y2d directly for the y-coordinate
-
-              const sphere = document.createElement("a-sphere");
-              sphere.setAttribute("position", `${x3d} ${y3d} ${z3d}`);
-              sphere.setAttribute("radius", "2");
-              sphere.setAttribute("color", "red");
-
-              const sound = document.createElement("a-sound");
-              sound.setAttribute("src", soundPath);
-              sound.setAttribute("autoplay", "false");
-              sound.setAttribute("volume", "50");
-
-              sphere.appendChild(sound);
-              container.appendChild(sphere);
-
-              sphere.addEventListener("click", () => {
-          //       if (sphere.getAttribute('color') === 'red') {
-          //   sphere.setAttribute('color', 'green');
-          // }
-                if (currentlyPlayingSound === sound) {
-                  sound.components.sound.stopSound();
-                  startTime = null;
-                  currentlyPlayingSound = null;
-                } else {
-                  logDurationAndStopSound();
-                  sound.components.sound.playSound();
-                  currentlyPlayingSound = sound;
-                  startTime = new Date();
-                }
-                // Log the audio path when the sphere is clicked
-                console.log(`${soundPath}`);
-              });
-
-              // Handle the end of the sound
-              sound.addEventListener('sound-ended', () => {
+            sphere.addEventListener("click", () => {
+              //       if (sphere.getAttribute('color') === 'red') {
+              //   sphere.setAttribute('color', 'green');
+              // }
+              if (currentlyPlayingSound === sound) {
+                sound.components.sound.stopSound();
+                startTime = null;
+                currentlyPlayingSound = null;
+              } else {
                 logDurationAndStopSound();
-              });
+                sound.components.sound.playSound();
+                currentlyPlayingSound = sound;
+                startTime = new Date();
+              }
+              // Log the audio path when the sphere is clicked
+              console.log(`${soundPath}`);
             });
-          })
-          .catch((error) => console.error("Error loading JSON:", error));
-      }
 
-      loadAndCreateSpheres(jsonUrl);
+            // Handle the end of the sound
+            sound.addEventListener('sound-ended', () => {
+              logDurationAndStopSound();
+            });
+          });
+        })
+        .catch((error) => console.error("Error loading JSON:", error));
+    }
 
-      document.querySelector('#redirect-button').addEventListener('click', function() {
-        window.location.href = 'https://zealous-puzzle-kumquat.glitch.me/';
-      });
-    </script>
-  </body>
+    loadAndCreateSpheres(jsonUrl);
+
+    document.querySelector('#redirect-button').addEventListener('click', function () {
+      window.location.href = 'https://zealous-puzzle-kumquat.glitch.me/';
+    });
+  </script>
+</body>
+
 </html>
