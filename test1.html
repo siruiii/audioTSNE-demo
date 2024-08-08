@@ -89,7 +89,7 @@
           sound.components.sound.playSound();
           setTimeout(() => {
             sound.components.sound.stopSound();
-            sound.setAttribute('volume', originalVolume);
+            sound.setAttribute('volume', vol);
           }, 500);
         } else {
           console.error('Sound component not found or not initialized.');
