@@ -81,6 +81,27 @@
       }
     }
 
+    function testPlaySound(sound) {
+      // Temporarily change the volume to 1 for test
+      const originalVolume = sound.getAttribute('volume');
+      sound.setAttribute('volume', '0');
+      
+      // Play sound briefly
+      setTimeout(() => {
+        if (sound && sound.components && sound.components.sound) {
+          sound.components.sound.playSound();
+          setTimeout(() => {
+            sound.components.sound.stopSound();
+            
+            // Restore the volume back to 50
+            sound.setAttribute('volume', originalVolume);
+          }, 500); // Play sound for 0.5 seconds for test
+        } else {
+          console.error('Sound component not found or not initialized.');
+        }
+      }, 100); // Short delay to ensure initialization
+    }
+
     function loadAndCreateSpheres(url) {
       fetch(url)
         .then((response) => response.json())
@@ -116,6 +137,9 @@
 
             sphere.appendChild(sound);
             container.appendChild(sphere);
+
+            // Test play the sound briefly
+            testPlaySound(sound);
 
             sphere.addEventListener("mouseenter", () => {
               if (currentlyPlayingSound) {
