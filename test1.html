@@ -7,40 +7,59 @@
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r110/three.min.js"></script>
   <style>
-    #redirect-button {
+    .checkbox-container {
       position: absolute;
       bottom: 20px;
       left: 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 10px 20px;
-      cursor: pointer;
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      grid-gap: 10px;
       z-index: 1;
     }
 
-    #redirect-button:hover {
-      background-color: #0056b3;
+    .checkbox-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .checkbox-row label {
+      margin: 0;
     }
   </style>
 </head>
 
 <body>
   <a-scene>
-    <a-sky src="Street View 360.jpg"></a-sky>
+    <a-sky color="grey"></a-sky>
 
     <a-camera position="0 0 0">
       <a-cursor></a-cursor>
     </a-camera>
 
     <a-entity id="sphere-container"></a-entity>
-    
 
-    <button id="redirect-button">Go Back</button>
+    <div class="checkbox-container">
+      <div class="checkbox-row">
+        <label><input type="checkbox" id="checkbox1"> Option 1</label>
+        <label><input type="checkbox" id="checkbox2"> Option 2</label>
+      </div>
+      <div class="checkbox-row">
+        <label><input type="checkbox" id="checkbox3"> Option 3</label>
+        <label><input type="checkbox" id="checkbox4"> Option 4</label>
+      </div>
+      <div class="checkbox-row">
+        <label><input type="checkbox" id="checkbox5"> Option 5</label>
+        <label><input type="checkbox" id="checkbox6"> Option 6</label>
+      </div>
+      <div class="checkbox-row">
+        <label><input type="checkbox" id="checkbox7"> Option 7</label>
+        <label><input type="checkbox" id="checkbox8"> Option 8</label>
+      </div>
+    </div>
+
   </a-scene>
   <script>
-    const jsonUrl = "tsne_results.json";
+    const jsonUrl = "mix064097.json";
 
     let currentlyPlayingSound = null;
     let startTime = null;
@@ -93,9 +112,6 @@
             container.appendChild(sphere);
 
             sphere.addEventListener("click", () => {
-              //       if (sphere.getAttribute('color') === 'red') {
-              //   sphere.setAttribute('color', 'green');
-              // }
               if (currentlyPlayingSound === sound) {
                 sound.components.sound.stopSound();
                 startTime = null;
@@ -120,10 +136,6 @@
     }
 
     loadAndCreateSpheres(jsonUrl);
-
-    document.querySelector('#redirect-button').addEventListener('click', function () {
-      window.location.href = 'responsiveui.html';
-    });
   </script>
 </body>
 
