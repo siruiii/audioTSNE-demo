@@ -232,12 +232,13 @@
     function getCheckboxStatuses() {
       const checkboxes = document.querySelectorAll('input[type="checkbox"]');
       const checkedIds = [];
-      
       checkboxes.forEach(checkbox => {
         if (checkbox.checked) {
           checkedIds.push(checkbox.id);
         }
       });
+      const checkedIdsString = checkedIds.join('');
+  console.log('Checked Checkbox IDs:', checkedIdsString);
 
       if (checkedIds.includes('checkbox1') && checkedIds.includes('checkbox3')) {
         if (checkedIds.includes('checkbox5')) {
