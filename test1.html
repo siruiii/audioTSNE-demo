@@ -1,63 +1,68 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="utf-8" />
   <title>Test 1</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r110/three.min.js"></script>
   <style>
     .checkbox-container {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
-      display: grid;
-      grid-template-columns: repeat(2, auto);
-      grid-gap: 10px;
+      top: 10px;
+      left: 10px;
       z-index: 1;
     }
-
     .checkbox-row {
       display: flex;
-      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
     }
-
-    .checkbox-row label {
+    .checkbox-column {
+      display: flex;
+      flex-direction: column;
+    }
+    .checkbox-column label {
+      margin-bottom: 5px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
       margin: 0;
+      margin-right: 10px;
+    }
+    .checkbox-row input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    .checkbox-label span {
+      margin-left: 5px;
+      min-width: 80px;
     }
   </style>
 </head>
-
 <body>
   <a-scene>
-    <a-sky color="grey"></a-sky>
-
-    <a-camera position="0 0 0">
+    <a-sky color="#5d86a6"></a-sky>
+    <a-camera position="0 1.6 3">
       <a-cursor></a-cursor>
     </a-camera>
-
     <a-entity id="sphere-container"></a-entity>
-
     <div class="checkbox-container">
       <div class="checkbox-row">
-        <label><input type="checkbox" id="checkbox1"> Option 1</label>
-        <label><input type="checkbox" id="checkbox2"> Option 2</label>
-      </div>
-      <div class="checkbox-row">
-        <label><input type="checkbox" id="checkbox3"> Option 3</label>
-        <label><input type="checkbox" id="checkbox4"> Option 4</label>
-      </div>
-      <div class="checkbox-row">
-        <label><input type="checkbox" id="checkbox5"> Option 5</label>
-        <label><input type="checkbox" id="checkbox6"> Option 6</label>
-      </div>
-      <div class="checkbox-row">
-        <label><input type="checkbox" id="checkbox7"> Option 7</label>
-        <label><input type="checkbox" id="checkbox8"> Option 8</label>
+        <div class="checkbox-column">
+          <label class="checkbox-label"><input type="checkbox" id="checkbox1"><span>Mix</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="checkbox3"><span>KL-1</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="checkbox5"><span>Sphere</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="checkbox7"><span>Mode-1</span></label>
+        </div>
+        <div class="checkbox-column">
+          <label class="checkbox-label"><input type="checkbox" id="checkbox2"><span>Split</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="checkbox4"><span>KL-2</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="checkbox6"><span>Cylinder</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="checkbox8"><span>Mode-2</span></label>
+        </div>
       </div>
     </div>
-
   </a-scene>
+
   <script>
     const jsonUrl = "mix064097.json";
 
@@ -96,34 +101,36 @@
             const theta = ((x2d - minX) / rangeX) * 2 * Math.PI;
             const x3d = radius * Math.cos(theta);
             const z3d = radius * Math.sin(theta);
-            const y3d = y2d; // Use y2d directly for the y-coordinate
+            const y3d = y2d;
 
             const sphere = document.createElement("a-sphere");
             sphere.setAttribute("position", `${x3d} ${y3d} ${z3d}`);
             sphere.setAttribute("radius", "2");
-            sphere.setAttribute("color", "red");
+            sphere.setAttribute("color", "white");
 
             const sound = document.createElement("a-sound");
             sound.setAttribute("src", soundPath);
             sound.setAttribute("autoplay", "false");
             sound.setAttribute("volume", "50");
+            sound.setAttribute("preload", "auto"); // Preload the sound to avoid initial noise
 
             sphere.appendChild(sound);
             container.appendChild(sphere);
 
-            sphere.addEventListener("click", () => {
+            sphere.addEventListener("mouseenter", () => {
+              if (currentlyPlayingSound) {
+                logDurationAndStopSound();
+              }
+              sound.components.sound.playSound();
+              currentlyPlayingSound = sound;
+              startTime = new Date();
+            });
+
+            sphere.addEventListener("mouseleave", () => {
               if (currentlyPlayingSound === sound) {
                 sound.components.sound.stopSound();
-                startTime = null;
-                currentlyPlayingSound = null;
-              } else {
                 logDurationAndStopSound();
-                sound.components.sound.playSound();
-                currentlyPlayingSound = sound;
-                startTime = new Date();
               }
-              // Log the audio path when the sphere is clicked
-              console.log(`${soundPath}`);
             });
 
             // Handle the end of the sound
@@ -138,5 +145,4 @@
     loadAndCreateSpheres(jsonUrl);
   </script>
 </body>
-
 </html>
